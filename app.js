@@ -1,6 +1,7 @@
 //jshint esversion:6
 
 const express = require("express");
+const req = require("express/lib/request");
 const mongoose = require('mongoose');
 const PORT = process.env.PORT || 3000;
 
@@ -37,9 +38,16 @@ const item3 = new Item({
 
 const defaultItems = [item1, item2, item3];
 
+const listSchema = {
+  name: String,
+  items: [itemsSchema] // going to have an array of item documents associated with listSchema
+}
+
+const List = mongoose.model('List', listSchema);
+
 app.get("/", function (req, res) {
 
-  Item.find({}, function (err, foundItems) {
+  Item.find({}, function (err, foundItems) { // find {} returns an array
     if (foundItems.length === 0) {
       Item.insertMany(defaultItems, (err) => {
         if (err) {
@@ -50,11 +58,42 @@ app.get("/", function (req, res) {
       });
       res.redirect("/");
     } else {
-      console.log(foundItems);
+      // console.log(foundItems);
       res.render("list", { listTitle: "Today", newListItems: foundItems });
     }
   })
 });
+
+app.get('/:customListName', function (req, res) {
+  const customListName = req.params.customListName;
+
+  List.findOne({name: customListName}, (err, foundList) => { // (err, results) || returns an object
+    if(!err) {
+      if(!foundList) {
+        // Create a new list
+        const list = new List({
+  
+          name: customListName,
+          items: defaultItems
+        });
+        list.save();
+        res.redirect('/' + customListName);
+
+      } else {
+        // Show an existing list
+        res.render("list", { listTitle: customListName, newListItems: foundList.items })
+      }
+    }
+  })
+
+  const list = new List({
+  
+    name: customListName,
+    items: defaultItems
+  });
+
+  list.save();
+})
 
 app.post("/", function (req, res) {
 
