@@ -11,7 +11,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-mongoose.connect(process.env.MONGODB_URI, "mongodb://localhost/todolistDB", {
+mongoose.connect("mongodb://localhost:27017/todolistDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -23,6 +23,27 @@ const itemsSchema = {
 // (singular version of collection name, schema we're going to use)
 const Item = mongoose.model('Item', itemsSchema);
 
+const item1 = new Item({
+  name: "Welcome to your todolist!"
+})
+
+const item2 = new Item({
+  name: "Hit the + button to add a new item."
+})
+
+const item3 = new Item({
+  name: "<-- Hit this to delete an item."
+})
+
+const defaultItems = [item1, item2, item3];
+
+Item.insertMany(defaultItems, (err) => {
+  if (err) {
+    console.log(err);
+  } else {
+    console.log("Successfully added to database.");
+  }
+})
 
 app.get("/", function(req, res) {
 
