@@ -5,6 +5,7 @@ const req = require("express/lib/request");
 const mongoose = require('mongoose');
 const _ = require("lodash");
 
+
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -14,7 +15,7 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", {
+mongoose.connect("mongodb+srv://admin-eugene:zz87578757@cluster0.ypjdt.mongodb.net/todoListDB", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
