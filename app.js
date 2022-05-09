@@ -3,6 +3,8 @@
 const express = require("express");
 const req = require("express/lib/request");
 const mongoose = require('mongoose');
+const _ = require("lodash");
+
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -65,14 +67,14 @@ app.get("/", function (req, res) {
 });
 
 app.get('/:customListName', function (req, res) {
-  const customListName = req.params.customListName;
+  const customListName = _.capitalize(req.params.customListName);
 
-  List.findOne({name: customListName}, (err, foundList) => { // (err, results) || returns an object
-    if(!err) { // if there is no error
-      if(!foundList) { // if no list is found
+  List.findOne({ name: customListName }, (err, foundList) => { // (err, results) || returns an object
+    if (!err) { // if there is no error
+      if (!foundList) { // if no list is found
         // Create a new list
         const list = new List({
-  
+
           name: customListName,
           items: defaultItems
         });
@@ -87,7 +89,7 @@ app.get('/:customListName', function (req, res) {
   })
 
   const list = new List({
-  
+
     name: customListName,
     items: defaultItems
   });
@@ -95,27 +97,46 @@ app.get('/:customListName', function (req, res) {
   list.save();
 })
 
-app.post("/", function (req, res) {
+app.post(("/"), function (req, res) {
 
   const itemName = req.body.newItem;
+  const listName = req.body.list;
 
   const item = new Item({
     name: itemName
   });
 
-  item.save();
-  res.redirect("/");
+  if (listName === "Today") {
+    item.save();
+    res.redirect("/");
+  } else {
+    List.findOne({name: listName}, (err, foundList) => {
+      foundList.items.push(item)
+      foundList.save(); // save to update it with new data
+      res.redirect("/" + listName);
+    })
+  }
 });
 
 app.post("/delete", (req, res) => {
   const checkedItemId = req.body.checkbox;
+  const listName = req.body.listName; // check value of the input=name (listName) from list.ejs
 
-  Item.findByIdAndRemove(checkedItemId, (err => { // requires a callback function to execute
-    if (!err) { // if no errors
-      console.log("Successfully deleted checked item.")
-      res.redirect("/");
-    }
-  }))
+  if(listName === "Today") {
+    Item.findByIdAndRemove(checkedItemId, (err => { // requires a callback function to execute
+      if (!err) { // if no errors
+        console.log("Successfully deleted checked item.")
+        res.redirect("/");
+      }
+    }))
+  } else { // {condition}, {what updates - must be array}, callback
+    List.findOneAndUpdate({name: listName}, {$pull: {items: {_id: checkedItemId}}}, function (err, foundList) { // {$pull: {field: {query}}}, field we want to pull from, must be an array then provide value
+      console.log(checkedItemId)
+      if (!err) {
+        res.redirect("/" + listName)
+      }
+    })
+  }  
 })
 
 app.get("/work", function (req, res) {
