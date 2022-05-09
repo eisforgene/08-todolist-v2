@@ -68,8 +68,8 @@ app.get('/:customListName', function (req, res) {
   const customListName = req.params.customListName;
 
   List.findOne({name: customListName}, (err, foundList) => { // (err, results) || returns an object
-    if(!err) {
-      if(!foundList) {
+    if(!err) { // if there is no error
+      if(!foundList) { // if no list is found
         // Create a new list
         const list = new List({
   
